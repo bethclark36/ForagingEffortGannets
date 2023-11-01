@@ -1,0 +1,35 @@
+#duration models ####
+fit1<-svyglm(Dur ~ sqrt.size + Lat, design = design)
+fit2<-svyglm(Dur ~ sqrt.size, design = design)
+fit3<-svyglm(Dur ~ Lat, design = design)
+
+anova(fit1, fit2) #lat effect
+anova(fit1, fit3) #size effect
+
+fit4<-svyglm(Dur ~ sqrt.size + Lon, design = design)
+fit5<-svyglm(Dur ~ sqrt.size, design = design)
+
+fit6<-svyglm(Dur ~ sqrt.size + Lat + Lon, design = design)
+
+anova(fit4, fit5) #lon effects
+
+anova(fit1,fit6) #lon effect 
+anova(fit4,fit6) #lat effect 
+
+#Check residuals for the best model (fit1)
+plot(simulateResiduals(fit1))
+#DHARMs results are good, but give a warning:
+#"fittedModel not in class of supported models. Absolutely no guarantee that this will work!"
+
+#check with a normal lm of the same structure 
+fitlm<-lm(Dur ~ sqrt.size + Lat, data = dat)
+plot(simulateResiduals(fitlm)) #same result
+
+#record model statistics
+summary(fit1) 
+
+jtools::summ(fit1) #size+lat
+summ(fit2) #size
+summ(fit3) #lat
+
+summ(fit)
