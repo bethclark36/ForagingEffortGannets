@@ -1,18 +1,23 @@
 #Sep 2023 Beth Clark & David Pascall
 
 #Load packages, data and set up ####
+install.packages("tidyverse") 
+install.packages("cowplot") 
+install.packages("DHARMa")
+install.packages("spaMM")
 library(tidyverse) 
 library(cowplot) 
 library(DHARMa)
 library(spaMM)
 
-sessionInfo() #he output is below showing the versions of R and rpackages used when this script was originally run:
+sessionInfo() #The output is below showing the versions of R and rpackages used when this script was originally run:
 
-#R version 4.3.1 (2023-06-16 ucrt)
+#R version 4.3.3 (2024-02-29 ucrt)
 #Platform: x86_64-w64-mingw32/x64 (64-bit)
 #Running under: Windows 11 x64 (build 22000)
 
 #Matrix products: default
+
 
 #locale:
 #[1] LC_COLLATE=English_United Kingdom.utf8  LC_CTYPE=English_United Kingdom.utf8   
@@ -26,21 +31,21 @@ sessionInfo() #he output is below showing the versions of R and rpackages used w
 #[1] stats     graphics  grDevices utils     datasets  methods   base     
 
 #other attached packages:
-#[1] spaMM_4.4.0     DHARMa_0.4.6    cowplot_1.1.1   lubridate_1.9.3 forcats_1.0.0   stringr_1.5.0  
+#[1] spaMM_4.4.0     DHARMa_0.4.6    cowplot_1.1.3   lubridate_1.9.3 forcats_1.0.0   stringr_1.5.0  
 #[7] dplyr_1.1.2     purrr_1.0.1     readr_2.1.4     tidyr_1.3.0     tibble_3.2.1    ggplot2_3.4.4  
 #[13] tidyverse_2.0.0
 
 #loaded via a namespace (and not attached):
-#[1]  utf8_1.2.3          generics_0.1.3      slam_0.1-50         stringi_1.7.12      lattice_0.21-8     
-#[6]  lme4_1.1-34         hms_1.1.3           magrittr_2.0.3      grid_4.3.1          timechange_0.2.0   
+#[1] utf8_1.2.3          generics_0.1.3      slam_0.1-50         stringi_1.7.12      lattice_0.22-5     
+#[6] lme4_1.1-34         hms_1.1.3           magrittr_2.0.3      grid_4.3.3          timechange_0.2.0   
 #[11] Matrix_1.6-1        backports_1.4.1     fansi_1.0.4         scales_1.2.1        pbapply_1.7-2      
-#[16] numDeriv_2016.8-1.1 registry_0.5-1      cli_3.6.1           rlang_1.1.1         crayon_1.5.2       
-#[21] ROI_1.0-1           munsell_0.5.0       splines_4.3.1       withr_2.5.0         tools_4.3.1        
-#[26] parallel_4.3.1      tzdb_0.4.0          checkmate_2.2.0     nloptr_2.0.3        minqa_1.2.5        
-#[31] colorspace_2.1-0    boot_1.3-28.1       vctrs_0.6.3         R6_2.5.1            proxy_0.4-27       
-#[36] lifecycle_1.0.3     MASS_7.3-60         pkgconfig_2.0.3     pillar_1.9.0        gtable_0.3.3       
-#[41] glue_1.6.2          Rcpp_1.0.11         tidyselect_1.2.0    rstudioapi_0.15.0   nlme_3.1-162       
-#[46] compiler_4.3.1    
+#[16] numDeriv_2016.8-1.1 registry_0.5-1      cli_3.6.1           crayon_1.5.2        rlang_1.1.1        
+#[21] ROI_1.0-1           munsell_0.5.0       splines_4.3.3       withr_2.5.0         parallel_4.3.3     
+#[26] tools_4.3.3         tzdb_0.4.0          checkmate_2.2.0     nloptr_2.0.3        minqa_1.2.5        
+#[31] colorspace_2.1-0    boot_1.3-29         vctrs_0.6.3         R6_2.5.1            proxy_0.4-27       
+#[36] lifecycle_1.0.3     MASS_7.3-60.0.1     pkgconfig_2.0.3     pillar_1.9.0        gtable_0.3.3       
+#[41] glue_1.6.2          Rcpp_1.0.11         tidyselect_1.2.0    rstudioapi_0.15.0   nlme_3.1-164       
+#[46] compiler_4.3.3 
 
 #Clear R environment
 rm(list=ls())
@@ -52,8 +57,6 @@ head(dat)
 #Calculate s=the square root of colony size
 dat$sqrt.size <- sqrt(dat$Size)
 head(dat)
-dat$Dur_original <- dat$Dur
-dat$Dur <- dat$Dur_original*10 #rescale for plotting
 
 #check response variable distributions (annual means per colony)
 hist(dat$Dur)     #Foraging trip duration
@@ -164,6 +167,12 @@ plot(DHARMa::simulateResiduals(size_lat))
 #no significant problems, so use to predict for plots
 
 #Duration plots predicting latitude ####
+
+dat$Dur_original <- dat$Dur
+dat$Dur <- dat$Dur_original*10 #rescale for plotting
+size_lat <- fitme(Dur ~ sqrt.size + Lat + (1|colony) + Matern(1|Lon + Lat),
+                  data=dat, control.dist = list(dist.method = "Earth"))
+
 border <- 1
 newdat <- tidyr::expand(data = dat,
                         Lat = seq((min(Lat)-border), 
@@ -225,6 +234,8 @@ ms_theme <- theme_bw()+
   theme(text = element_text(size=20)) +
   theme(axis.text=element_text(colour="black")) +
   theme(axis.title.y = element_blank(),axis.title.x = element_blank())
+
+
 
 head(newdat)
 dl3 <-ggplot(newdat, aes(x=Lat, y=pred)) + 
